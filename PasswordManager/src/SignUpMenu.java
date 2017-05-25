@@ -4,32 +4,56 @@ import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import static java.awt.image.ImageObserver.WIDTH;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.HashSet;
-import java.util.Random;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.SignatureException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.Vector;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.filechooser.FileSystemView;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.*;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.X509Extension;
+import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.crypto.generators.PKCS5S2ParametersGenerator;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.jce.PKCS10CertificationRequest;
+import org.bouncycastle.jce.X509Principal;
+import org.bouncycastle.x509.X509V1CertificateGenerator;
 
 
 
@@ -41,18 +65,6 @@ public class SignUpMenu extends JFrame implements ActionListener
     private JButton Sign_Up, CLEAR ;
     private JTextField LOGIN_NAME_FIELD, NAME_SUR_FIELD, EMAILFIELD, SURNAME_FIELD ;
     private JPasswordField Password_1, Password_2 ;
-    private Cipher CIPHER = null ;
-    private FileInputStream INPUT_STREAM = null ;
-    private ObjectInputStream INPUT_STREAM_2 = null ;
-    private ObjectOutputStream OUTPUT_STREAM_2 = null ;
-    private FileOutputStream OUTPUT_STREAM = null ;
-    private PublicKey OBJ = null ;
-    private KeyGenerator KEY_GENERATOR = null ;
-    private SecretKey SYMMETRIC_KEY = null ;
-    private boolean LOGIN_NAME_EXISTS_FLAG = false, Counter_Byte_Exists_Hash = false ;
-   // private USERS_INFO USERS_INFO_OBJ = null ;
-    private HashSet HASHSET_SALTS = null ;
-    private byte [ ] BYTE_UNIQUE = null, SALT_AND_PASSWORD = null, TEMP_SALT = null   ;
    
     
     
@@ -64,7 +76,7 @@ public class SignUpMenu extends JFrame implements ActionListener
         setSize ( 800, 550 ) ;
         setLocationRelativeTo ( null ) ;
         setVisible ( true ) ;
-        
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); //----
           //
         //https://www.clear.rice.edu/comp310/JavaResources/frame_close.html
         //In this technique a WindowListener interface implentation is added to the frame, where the listener has a method, windowClosing(), that is called when the frame is closed.
@@ -80,7 +92,7 @@ public class SignUpMenu extends JFrame implements ActionListener
         //
         //Locating and Initializing Components
         
-        L1 = new JLabel ( "Please Enter Name & Password to Sign Up  " ) ;
+        L1 = new JLabel ( "Please Enter your Info to Sign Up  " ) ;
         L1.setForeground ( Color.BLACK ) ;
         L1.setFont  (new Font ( "Courier New", Font.BOLD, 25 ) ) ;
         L1.setBounds ( 100, 50, 900, 40 ) ;
@@ -195,475 +207,281 @@ public class SignUpMenu extends JFrame implements ActionListener
             NAME_SUR_FIELD.setText ( "" ) ;
             Password_1.setText ( "" ) ;
             Password_2.setText ( "" ) ;
+            EMAILFIELD.setText ( "" ) ;
+            SURNAME_FIELD.setText ( "" ) ;
         }
         
         
         //SIGN_UP
         if ( source == Sign_Up )
         {
-            if ( LOGIN_NAME_FIELD.getText ( ).equals ( "" ) || Password_1.getPassword ( ).length == 0 || Password_2.getPassword ( ).length == 0 || NAME_SUR_FIELD.getText ( ).equals ( "" ) )
+            //1
+            if ( ! ( LOGIN_NAME_FIELD.getText ( ).equals ( "" ) ) )
             {
-                JOptionPane.showMessageDialog ( this, "Please enter all Fields before continue", "Warning", JOptionPane.WARNING_MESSAGE ) ;
-            }
-            else //When you entered as input all necessary Fields
-            {
-                if (   ! ( Password_1.getText ( ) ).equals ( Password_2.getText ( ) )     )    //PREPEI KAI TA 2 PEDIA KODIKON NA EINAI TA IDIA
+                if ( ! ( NAME_SUR_FIELD.getText ( ).equals ( "" ) ) )
                 {
-                    JOptionPane.showMessageDialog ( this, "Please enter valid Password both Fields", "Warning", JOptionPane.WARNING_MESSAGE ) ;
-                    Password_1.setText ( "" ) ;
-                    Password_2.setText ( "" ) ;
+                    if ( ! ( SURNAME_FIELD.getText ( ).equals ( "" ) ) )
+                    {
+                        if ( ! ( EMAILFIELD.getText ( ).equals ( "" ) ) )
+                        {
+                            if ( ! ( Password_1.getText ( ).equals ( "" ) ) )
+                            {
+                                if ( ! ( Password_2.getText ( ).equals ( "" ) ) )
+                                {
+                                    //Then all fields have been written
+                                    //1
+                                    //Check for email validility
+                                     final String EMAIL_REGEX = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$" ;
+                                     Boolean b = SURNAME_FIELD.getText ( ).matches ( EMAIL_REGEX ) ;
+                                     if ( b == true )
+                                     {
+                                         //2
+                                         //Check  if 2 passwords are the same
+                                         String pass1 = Password_1.getText ( ) ;
+                                         String pass2 = Password_2.getText ( ) ;
+                                         if ( pass1.equals ( pass2 ) )
+                                         {
+                                             boolean localFlag = false ;
+                                             //3
+                                             //Then  see if there is User with same USERNAME
+                                             File folder = new File ( "USERS" ) ;
+                                             File [ ] listOfFiles = folder.listFiles ( ) ;
+                                             final String userName = EMAILFIELD.getText ( ) ;
+                                             for ( int i = 0 ; i < listOfFiles.length ; i ++ ) 
+                                             {
+                                                 if ( ( listOfFiles [ i ].getName ( ) ).equals ( userName ) )
+                                                 {
+                                                     localFlag = true ;
+                                                     break ;
+                                                 }
+                                             }
+                                             //ASo here, we are ready to say if User can sign up or must try with other UserName
+                                             if ( localFlag == false )
+                                             {
+                                                 //A
+                                                 //Create Key Pair
+                                                 try   
+                                                 {
+                                                    KeyPairGenerator OBJECT_KEY = null;
+                                                    KeyPair KEY_PAIR = null ;
+                                                    PrivateKey PRIVATE_KEY = null ;
+                                                    PublicKey PUBLIC_KEY = null ;
+                                                    OBJECT_KEY = KeyPairGenerator.getInstance ( "RSA" ) ;  //Επιστρέφουμε το αντικείμενο που παράγει τα κλειδιά με τον RSA
+                                                    OBJECT_KEY.initialize ( 2048 ) ; //Αρχικοποιούμε την γεννήτρια
+                                                    KEY_PAIR = OBJECT_KEY.genKeyPair ( ); //Παράγουμε το ζευγάρι κλειδιών και το αποθηκεύουμε στο KEY_PAIR
+                                                    PRIVATE_KEY = KEY_PAIR.getPrivate ( ); //Αποκτούμε την αναφορά στο ιδιωτικό κλειδί
+                                                    //Αποκτούμε την αναφορά στο δημόσιο κλειδί
+                                                    PUBLIC_KEY = KEY_PAIR.getPublic ( ) ; //Αποκτούμε την αναφορά στο δημόσιο κλειδί
+                                                    //A
+                                                    
+                                                    //B
+                                                    // create the extension value
+                                                    // GeneralNames subjectAltName = new GeneralNames ( new GeneralName ( GeneralName.dNSName, SURNAME_FIELD.getText ( ) ) ) ;
+                                                    // create the extensions object and add it as an attribute
+                                                    Hashtable  attrs = new Hashtable();
+                                                    attrs.put(X509Principal.C, "GR");
+                                                    attrs.put(X509Principal.O,LOGIN_NAME_FIELD.getText ( ) + NAME_SUR_FIELD.getText ( ) );
+                                                    attrs.put(X509Principal.EmailAddress, SURNAME_FIELD.getText ( ) );
+                                                    Vector  order = new Vector ( ) ;
+                                                    order.addElement ( X509Principal.C ) ;
+                                                    order.addElement ( X509Principal.O ) ;
+                                                    order.addElement ( X509Principal.EmailAddress ) ;
+                                                    X509Name   subject = new X509Name ( order, attrs ) ;
+                                                    PKCS10CertificationRequest req1 = new PKCS10CertificationRequest ( "SHA1withRSA", subject, KEY_PAIR.getPublic ( ), null, KEY_PAIR.getPrivate ( ) ) ;
+                                                    ///B. CSR Ready
+                                                    
+                                                    //C
+                                                    //Verify the CSR
+                                                    //If the request is successful, the certificate authority will send back an identity certificate that has been digitally signed using the private key of the 
+                                                    //certificate authority.
+                                                    boolean VerifiedCSR = req1.verify ( PUBLIC_KEY, "BC" ) ;  //will be caught if false
+                                                    //C
+                                                    
+                                                    //D
+                                                    //Create the X509 Certificate of User now
+                                                     Date startDate = new Date ( ) ;             // time from which certificate is valid
+                                                     Calendar cal = Calendar.getInstance ( ) ;
+                                                     cal.set ( 2017, Calendar.DECEMBER, 1 ) ;         //Year, month and day of month
+                                                     Date expiryDate = cal.getTime ( ) ;          // time after which certificate is not valid
+                                                     BigInteger serialNumber = BigInteger.valueOf ( (int) ( new Date ( ).getTime ( ) / 1000 ) ) ;    // serial number for certificate
+                                                     X509V1CertificateGenerator certGen = new X509V1CertificateGenerator ( ) ;
+                                                     X509Principal dnName = new X509Principal ( "CN=Test CA Certificate" ) ;
+                                                     certGen.setSerialNumber (  serialNumber  ) ;
+                                                     certGen.setIssuerDN ( dnName ) ;
+                                                     certGen.setNotBefore ( startDate ) ;
+                                                     certGen.setNotAfter ( expiryDate ) ;
+                                                     certGen.setSubjectDN ( dnName ) ;       // note: same as issuer
+                                                     certGen.setPublicKey ( PUBLIC_KEY ) ;
+                                                     certGen.setSignatureAlgorithm ( "SHA1withRSA" ) ;
+                                                     SecureRandom sr = SecureRandom.getInstance ( "SHA1PRNG" ) ;
+                                                     //===============================================================================
+                                                     KeyStore KSSpace = KeyStore.getInstance("JKS");
+                                                     // get user password and file input stream
+                                                     FileInputStream Fis = null;
+                                                     try 
+                                                     {
+                                                         Fis = new FileInputStream ( "PM.jks" ) ;
+                                                         KSSpace.load ( Fis, "password".toCharArray(  ) );
+                                                     } 
+                                                     finally 
+                                                     {
+                                                         if ( Fis != null ) 
+                                                         {
+                                                             Fis.close ( ) ;
+                                                         } 
+                                                     }
+                                                     //retrieve
+                                                     PrivateKey pkkp = ( PrivateKey ) KSSpace.getKey ( "Priv", "password".toCharArray ( ) ) ;
+                                                     //==================================================================================
+                                                     X509Certificate cert = certGen.generate ( pkkp, sr ) ;   //signed with PRIVATE KEY OF APP (CA)
+                                                     //D
+                                                   
+                                                     //E
+                                                     //Create a file .auth, that contains the record < Username, Authhash >
+                                                     //Create sKey
+                                                     File UserFile = new File ( "USERS\\" +  EMAILFIELD.getText ( ) ) ;
+                                                     UserFile.mkdir ( ) ; 
+                                                     PKCS5S2ParametersGenerator gen = new PKCS5S2ParametersGenerator ( ) ;
+                                                     gen.init ( pass1.getBytes ( ), EMAILFIELD.getText ( ).getBytes ( ), 2000 ) ;
+                                                     byte [ ] sKey = ( ( KeyParameter ) gen.generateDerivedParameters ( 128 ) ).getKey ( ) ;   // n bits. 16 bytes -> 
+                                                     //Produce AuthHash
+                                                     PKCS5S2ParametersGenerator forauth = new PKCS5S2ParametersGenerator ( ) ;
+                                                     gen.init ( sKey, pass1.getBytes ( ), 1000 ) ;
+                                                     byte [ ] authHash = ( ( KeyParameter ) gen.generateDerivedParameters ( 128 ) ).getKey ( ) ;   // n bits. 16 bytes -> 
+                                                     //E
+                                                     
+                                                     //F
+                                                     //Construct the UserNameAuthHash object and save it to Users directory
+                                                     UserNameAuthHash  UnAh = new UserNameAuthHash ( EMAILFIELD.getText ( ), authHash ) ;
+                                                     FileOutputStream fout = null ;
+                                                     ObjectOutputStream oos = null ;
+                                                     fout = new FileOutputStream ( "USERS\\" + EMAILFIELD.getText ( ) + "\\" + EMAILFIELD.getText ( ) + ".auth" ) ;
+                                                     oos = new ObjectOutputStream ( fout ) ;
+                                                     oos.writeObject ( UnAh ) ;
+                                                     oos.close ( ) ;
+                                                     //F
+                                                     
+                                                     //G
+                                                     //Export Cert and keys
+                                                     String fileName = null ;
+                                                     File selectedFile = null ;
+                                                     JFileChooser fileChooser = new JFileChooser ( ) ;
+                                                     int status = fileChooser.showSaveDialog ( null ) ;
+                                                     if ( status == JFileChooser.APPROVE_OPTION ) 
+                                                     {
+                                                          selectedFile = fileChooser.getSelectedFile ( ) ;
+                                                          fileName = selectedFile.getCanonicalPath ( ) ;
+                                                          System.out.println ( " einai -> " + fileName ) ;
+                                                     }
+                                                     File f = new File ( fileName ) ;
+                                                     //==
+                                                     ZipOutputStream out = new ZipOutputStream ( new FileOutputStream ( f ) ) ;
+                                                     byte [ ] Array  = cert.getEncoded ( ) ;
+                                                     byte [ ] Array2  = PUBLIC_KEY.getEncoded ( ) ;
+                                                     byte [ ] Array3 = PRIVATE_KEY.getEncoded ( ) ;
+                                                     ArrayList < byte [ ] > Hr = new ArrayList < byte [ ] > ( ) ;
+                                                     Hr.add ( Array ) ;
+                                                     Hr.add ( Array2 ) ;
+                                                     Hr.add ( Array3) ;
+                                                     ArrayList < String > Na = new ArrayList < String> ( ) ;
+                                                     Na.add ( new String ( "PMCert.crt") ) ;
+                                                     Na.add ( new String ( "PMpubKey.key")  ) ;
+                                                     Na.add ( new String ( "PMpriKey.key") ) ;
+                                                     for ( int i = 0  ;  i < Hr.size ( ) ;  i ++ )
+                                                     {
+                                                         ZipEntry e = new ZipEntry ( Na.get ( i ) ) ;
+                                                         out.putNextEntry ( e ) ;
+                                                         byte [ ] data = Hr.get ( i ) ;
+                                                         out.write ( data, 0, data.length ) ;
+                                                         out.closeEntry ( ) ;
+                                                     }
+                                                     out.close ( ) ;
+                                                     //G
+                                                     
+                                                     //Now OK
+                                                     JOptionPane.showMessageDialog ( rootPane,"Sign up done ","Sucessfull",JOptionPane.INFORMATION_MESSAGE ) ;
+                                                     this.dispose ( ) ;
+                                                     new MainMenu ( ) ;
+                                                 }
+                                                 catch ( CertificateException CE )
+                                                 {
+                                                     JOptionPane.showMessageDialog ( rootPane,"SignUpMenu - CertificateException","Exception ",JOptionPane.ERROR_MESSAGE ) ;
+                                                 }
+                                                 catch ( UnrecoverableKeyException UKE )
+                                                 {
+                                                     JOptionPane.showMessageDialog ( rootPane,"SignUpMenu - UnrecoverableKeyException","Exception ",JOptionPane.ERROR_MESSAGE ) ;
+                                                 }
+                                                 catch ( KeyStoreException KSE )
+                                                 {
+                                                     JOptionPane.showMessageDialog ( rootPane,"SignUpMenu - KeyStoreException","Exception ",JOptionPane.ERROR_MESSAGE ) ;
+                                                 }
+                                                 catch ( SignatureException SE )
+                                                 {
+                                                     JOptionPane.showMessageDialog ( rootPane,"SignUpMenu - SignatureException","Exception",JOptionPane.ERROR_MESSAGE ) ;
+                                                 }
+                                                 catch ( InvalidKeyException IKE )
+                                                 {
+                                                     JOptionPane.showMessageDialog ( rootPane,"SignUpMenu - InvalidKeyException","Exception",JOptionPane.ERROR_MESSAGE ) ;
+                                                 }
+                                                 catch ( NoSuchProviderException NSAE )
+                                                 {
+                                                     JOptionPane.showMessageDialog ( rootPane,"SignUpMenu - NoSuchProviderException","Exception ",JOptionPane.ERROR_MESSAGE ) ;
+                                                     NSAE.printStackTrace();
+                                                 }
+                                                 catch ( NoSuchAlgorithmException NSAE )
+                                                 {
+                                                     JOptionPane.showMessageDialog ( rootPane,"SignUpMenu - NoSuchAlgorithmException","Exception",JOptionPane.ERROR_MESSAGE ) ;
+                                                 }
+                                                 catch ( IOException IOE )
+                                                 {
+                                                     JOptionPane.showMessageDialog ( rootPane,"SignUpMenu - IOException","Try again ",JOptionPane.ERROR_MESSAGE ) ;
+                                                 }
+                                             }
+                                             else if ( localFlag == true )
+                                             { //try aggain
+                                                 JOptionPane.showMessageDialog ( rootPane,"Try again with different Username","Try again ",JOptionPane.ERROR_MESSAGE ) ;
+                                             }
+                                         }
+                                         else
+                                         {
+                                             JOptionPane.showMessageDialog ( rootPane,"Enter same password  !","Password ",JOptionPane.WARNING_MESSAGE ) ;
+                                         }
+                                     }
+                                     else
+                                     {
+                                         JOptionPane.showMessageDialog ( rootPane,"Enter a valid email !","Validility Email",JOptionPane.WARNING_MESSAGE ) ;
+                                         EMAILFIELD.setText ( "" ) ;
+                                     }
+                                }
+                                else
+                                {
+                                    JOptionPane.showMessageDialog ( rootPane,"Enter password !","Blank Field",JOptionPane.WARNING_MESSAGE ) ;
+                                }
+                            }
+                            else
+                            {
+                                JOptionPane.showMessageDialog ( rootPane,"Enter password !","Blank Field",JOptionPane.WARNING_MESSAGE ) ;
+                            }
+                        }
+                        else
+                        {
+                            JOptionPane.showMessageDialog ( rootPane,"Enter a UserName !","Blank Field",JOptionPane.WARNING_MESSAGE ) ;
+                        }
+                    }
+                    else
+                    {
+                        JOptionPane.showMessageDialog ( rootPane,"Enter an email !","Blank Field",JOptionPane.WARNING_MESSAGE ) ;
+                    }
                 }
-                else  //You have to enter the same paassword for safety both JPassword Fields
+                else
                 {
-                    
-                  File CHECK_IF_EXISTS_USERS_INFO_Data = new File ( "C:\\Users\\LU$er\\Desktop\\My Folder\\Locations\\NetBeansProjects\\Secure_Management\\USERS_INFO.data" ) ;
-    
-                  if ( CHECK_IF_EXISTS_USERS_INFO_Data.exists ( ) ) // 1st SIGN_UP, NO MEANING TO CHECK FOR LOGIN_NAME, 
-                  {  //First check if the Login Name that User entered already exists
-                      try
-                      {   System.out.println ( " Sosara leme" ) ;
-                           this.INPUT_STREAM = new FileInputStream ( "C:\\Users\\LU$er\\Desktop\\My Folder\\Locations\\NetBeansProjects\\Secure_Management\\USERS_INFO.data" ) ;
-                           while ( true )
-                           {
-                            // this.INPUT_STREAM_2 = new ObjectInputStream ( INPUT_STREAM ) ;
-                             // this.USERS_INFO_OBJ = ( USERS_INFO ) INPUT_STREAM_2.readObject ( ) ;  //Take key from File with casting
-                           //   System.out.println ( "Name that exists -> " + USERS_INFO_OBJ.GET_LOGIN_NAME ( ) ) ;
-                             // if ( USERS_INFO_OBJ.GET_LOGIN_NAME ( ).equals ( LOGIN_NAME_FIELD.getText ( ) ) )
-                              {   // System.out.println ( "Name that exists -> " + USERS_INFO_OBJ.GET_LOGIN_NAME ( ) ) ;
-                                  LOGIN_NAME_EXISTS_FLAG = true ;  //If the login name founded, then deny Sign_UP, and try again
-                              } 
-                           }
-                      }
-                      catch ( FileNotFoundException FNFE )
-                      {
-                          JOptionPane.showMessageDialog ( null, "Error -> " + FNFE.getLocalizedMessage ( ), "Exception - FileNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                      }
-                     // catch ( ClassNotFoundException CNFE )
-                      {
-                        //  JOptionPane.showMessageDialog ( null, "Error -> " + CNFE.getLocalizedMessage ( ), "Exception - ClassNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                      }
-                     // catch ( IOException IOE )
-                      {
-                          //JOptionPane.showMessageDialog ( null, "Error -> " + IOE.getLocalizedMessage ( ), "Exception - IOException", JOptionPane.ERROR_MESSAGE, null ) ;
-                      }
-                      
-                      if ( LOGIN_NAME_EXISTS_FLAG == true )
-                      {
-                          LOGIN_NAME_EXISTS_FLAG = false ;  //Clear flag
-                          JOptionPane.showMessageDialog ( null, "The Login Name you have entered, already exists.. Please try again", null, WIDTH, null ) ;
-                          LOGIN_NAME_FIELD.setText ( "" ) ;
-                          NAME_SUR_FIELD.setText ( "" ) ;
-                          Password_1.setText ( "" ) ;
-                          Password_2.setText ( "" ) ;
-                          //
-                          INPUT_STREAM = null ;
-                          INPUT_STREAM_2 = null ;
-                         // USERS_INFO_OBJ = null ;
-                      }
-                      else //The Login Name that User choose, is clear,so allow him to Sign_Up
-                      {
-                          byte [ ] PASSWORD_BYTES = Password_1.getText ( ).getBytes ( ) ;   //Getting bytes amount from String -> PASSWORD
-                    
-                          byte [ ] SALT = new byte [ 20 ] ;  //20 Allocation Memory
-                          new Random ( ).nextBytes ( SALT ) ;// Filling byte array - SALT with random amount of bytes for user
-                          System.out.println ( " to salt gia ton 2o kai > xristi einau " +SALT ) ;
-                          //Check is salt is using by other User, so produce different and random
-                          try
-                          {
-                              HASHSET_SALTS = new HashSet < byte [ ] > ( ) ;
-                              this.INPUT_STREAM = new FileInputStream ( "C:\\Users\\LU$er\\Desktop\\My Folder\\Locations\\NetBeansProjects\\Secure_Management\\USERS_INFO.data" ) ;
-                              while ( true )  //read all .data to check every salt
-                              {
-                             //    this.INPUT_STREAM_2 = new ObjectInputStream ( this.INPUT_STREAM ) ;
-                              //   USERS_INFO OBJECT = ( USERS_INFO ) this.INPUT_STREAM_2.readObject ( ) ;
-                                // System.out.println ( " SALT OF 1ST from opening file" + OBJECT.GET_SALT ( ) ) ;
-                               //  HASHSET_SALTS.add ( OBJECT.GET_SALT ( ) ) ;   //add every salt from file to hash set
-                              }
-                          }
-                          catch ( FileNotFoundException FNFE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + FNFE.getLocalizedMessage ( ), "Exception - FileNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                        //  catch ( ClassNotFoundException CNFE )
-                          {
-                            //  JOptionPane.showMessageDialog ( null, "Error -> " + CNFE.getLocalizedMessage ( ), "Exception - ClassNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                         // catch ( IOException IOE )
-                          {
-                              //JOptionPane.showMessageDialog ( null, "Error ->MIPOS ?? " + IOE.getLocalizedMessage ( ), "Exception - IOException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }   //Check for same salts
-                              if ( HASHSET_SALTS.contains ( SALT ) )
-                              {  //until produce different Salt
-                                  Counter_Byte_Exists_Hash = true ;
-                                  do
-                                  {
-                                      BYTE_UNIQUE = new byte [ 20 ] ;
-                                      new Random ( ).nextBytes ( BYTE_UNIQUE ) ;// Filling byte array - SALT with random amount of bytes for
-                                  } while ( HASHSET_SALTS.contains ( BYTE_UNIQUE ) ) ;
-                              }
-                          //Now we are sure for Unique salt for every user
-                         
-                          //Merge 2 bytes array to one total BYTE , to get total bytes for hashing
-                          if ( Counter_Byte_Exists_Hash == true  )
-                          {
-                              SALT_AND_PASSWORD = new byte [ BYTE_UNIQUE.length + PASSWORD_BYTES.length ] ;//CONCATENATION TO FINAL BYTE ARRAY
-                              TEMP_SALT = BYTE_UNIQUE ;
-                          }
-                          else
-                          {    
-                              SALT_AND_PASSWORD = new byte [ SALT.length + PASSWORD_BYTES.length ] ;//CONCATENATION TO FINAL BYTE ARRAY
-                              TEMP_SALT = SALT ;
-                          }
-                          //Now we have the final Salt which is different from the rest Salts, Unique !!
-                          for ( int i = 0 ;    i < SALT_AND_PASSWORD.length ;   ++i )
-                          {
-                              SALT_AND_PASSWORD [ i ] = i < TEMP_SALT.length ? TEMP_SALT [ i ] : PASSWORD_BYTES [ i - TEMP_SALT.length ] ;
-                          } 
-                    
-                          MessageDigest MESSAGE_DIGEST = null ;
-                          try
-                          {
-                              MESSAGE_DIGEST = MessageDigest.getInstance ( "SHA-256" ) ;
-                              //Returns a MessageDigest object that implements the specified digest algorithm.
-                          }
-                          catch ( NoSuchAlgorithmException ex ) 
-                          {
-                             JOptionPane.showMessageDialog ( null, "Error -> " + ex.getLocalizedMessage ( ), "Exception - NoSuchAlgorithmException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          MESSAGE_DIGEST.update ( SALT_AND_PASSWORD ) ;      //Updates the digest using the specified byte.
-                          byte [ ] HASH_VALUE = MESSAGE_DIGEST.digest ( ) ;  // SHA-256 Completes the hash computation by performing final operations such as padding.
-                          //and store it to byte array
-                          System.out.println ( " To thash value gia ton 2on xristi kai > einai -> " + HASH_VALUE ) ;
-                          StringBuffer sb = new StringBuffer ( ) ;
-                          for ( int i = 0 ;   i < HASH_VALUE.length ;  i++ )
-                          {
-                              sb.append ( Integer.toString ( ( HASH_VALUE [ i ] & 0xff ) + 0x100, 16 ).substring ( 1 ) ) ;  
-                          }
- 
-                          JOptionPane.showMessageDialog ( null, "HASH_VALUE at SIGN_UP =>  " +sb.toString ( ), MESSAGE_DIGEST.toString ( ), JOptionPane.INFORMATION_MESSAGE, null ) ;
-                          //APPEAR HASH VALUE - DIGEST
-                          //Now encrpyt Hash value with public key
-                          try
-                          {
-                             
-                             //Now Open Stream to Open PUBLIC KEY FROM File.dat, TO READ PUBLIC KEY TO ENCRYPT HASH DIGEST
-                             try
-                             {
-                                INPUT_STREAM = new FileInputStream ( "C:\\Users\\LU$er\\Desktop\\My Folder\\Locations\\NetBeansProjects\\Secure_Management\\PUBLIC_KEY.data" ) ;
-                                INPUT_STREAM_2 = new ObjectInputStream ( INPUT_STREAM ) ;
-                                OBJ = ( PublicKey ) INPUT_STREAM_2.readObject ( ) ;  //Take key from File with casting
-                             }
-                             catch ( FileNotFoundException FNFE )
-                             {
-                                 JOptionPane.showMessageDialog ( null, "Error -> " + FNFE.getLocalizedMessage ( ), "Exception - FileNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                             }
-                             catch ( ClassNotFoundException CNFE )
-                             {
-                                 JOptionPane.showMessageDialog ( null, "Error -> " + CNFE.getLocalizedMessage ( ), "Exception - ClassNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                             }
-                             catch ( IOException IOE )
-                             {
-                                 //JOptionPane.showMessageDialog ( null, "Error -> " + IOE.getLocalizedMessage ( ), "Exception - IOException", JOptionPane.ERROR_MESSAGE, null ) ;
-                             }
-                             //End of READ KEY FROM FLLE
-                       
-                             //
-                             try
-                             {
-                                 CIPHER = Cipher.getInstance ( "RSA" ) ; //Returns a Cipher object that implements the specified transformation.
-                                 //RSA IS ASSYMETRIC ENCRYPTION, the decryption requires A PRIVATE KEY//Initializes this cipher with a key.
-                                 CIPHER.init ( Cipher.ENCRYPT_MODE, OBJ ) ;    
-                                 //ENCRYPT MODE static inT ,Constant used to initialize cipher to encryption mode
-                                 byte [ ] FINAL_ENCRYPTED_PASSWORD = CIPHER.doFinal ( HASH_VALUE ) ;  //Encrypted hash value is now saved yo byte array
-                                 //Encrypts data in a single-part operation, or finishes a multiple-part operation.
-                                 //Now create FILE < USERS_INFO >
-                                 try
-                                 {
-                                   this.OUTPUT_STREAM =  new FileOutputStream ( "USERS_INFO.data", true ) ;  //Do not overwrite file but add every time
-                                   this.OUTPUT_STREAM_2 = new ObjectOutputStream ( this.OUTPUT_STREAM ) ;
-                                   if ( Counter_Byte_Exists_Hash == true )
-                                   {
-                                      // this.OUTPUT_STREAM_2.writeObject ( new USERS_INFO ( LOGIN_NAME_FIELD.getText ( ), NAME_SUR_FIELD.getText ( ), BYTE_UNIQUE, FINAL_ENCRYPTED_PASSWORD ) ) ;
-                                       Counter_Byte_Exists_Hash = false ;
-                                   }
-                                   else
-                                   {
-                                      // this.OUTPUT_STREAM_2.writeObject ( new USERS_INFO ( LOGIN_NAME_FIELD.getText ( ), NAME_SUR_FIELD.getText ( ), SALT, FINAL_ENCRYPTED_PASSWORD ) ) ;
-                                       Counter_Byte_Exists_Hash = false ;   
-                                   }
-                                 }
-                                 catch ( FileNotFoundException FNFE )
-                                 {
-                                     JOptionPane.showMessageDialog ( null, "Error -> " + FNFE.getLocalizedMessage ( ), "Exception - FileNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                                 }
-                                 catch ( IOException IOE )
-                                 {
-                                     //JOptionPane.showMessageDialog ( null, "Error -> " + IOE.getLocalizedMessage ( ), "Exception - IOException", JOptionPane.ERROR_MESSAGE, null ) ;
-                                 }
-                              }
-                              catch ( InvalidKeyException IKE )
-                              {
-                                 JOptionPane.showMessageDialog ( null, "Error -> " + IKE.getLocalizedMessage ( ), "Exception - InvalidKeyException", JOptionPane.ERROR_MESSAGE, null ) ;
-                              }
-                             catch ( IllegalBlockSizeException IBSE )
-                             {
-                                 JOptionPane.showMessageDialog ( null, "Error -> " + IBSE.getLocalizedMessage ( ), "Exception - IllegalBlockSizeException", JOptionPane.ERROR_MESSAGE, null ) ;
-                             }
-                             catch (  BadPaddingException BPE )
-                             {
-                                 JOptionPane.showMessageDialog ( null, "Error -> " + BPE.getLocalizedMessage ( ), "Exception - BadPaddingException", JOptionPane.ERROR_MESSAGE, null ) ;
-                             }
-                          }
-                          catch ( NoSuchPaddingException NSPE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + NSPE.getLocalizedMessage ( ), "Exception - NoSuchPaddingException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          catch ( NoSuchAlgorithmException NSAE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + NSAE.getLocalizedMessage ( ), "Exception - NoSuchAlgorithmException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          //End of which salt is choosen
-                          //NOW CREATE FOLDER FOR EVERY USER TO SAVE FOR HIM A KEY
-                          File USERNAME = new File ( LOGIN_NAME_FIELD.getText ( ) ) ;
-                          USERNAME.mkdir ( ) ;
-      
-                          //Now create symmmetric key for User in a file inside Folder - SYMMETRIC_KEY..data
-                          try
-                          {  //Returns a KeyGenerator object that generates secret keys for the specified algorithm.
-                             KEY_GENERATOR = KeyGenerator.getInstance ( "AES" ) ;  // symetric encryption, secret key is use for aes algorithm
-                             //KeyGenerator objects are reusable, i.e., after a key has been generated,
-                             //the same KeyGenerator object can be re-used to generate further keys.
-                             //The same key for decryption
-                             KEY_GENERATOR.init ( 256 ) ;  //Initializes this key generator for a certain keysize.
-                             SYMMETRIC_KEY = KEY_GENERATOR.generateKey ( ) ;  //Generates a secret key. SYMMETRIC
-                             System.out.println ( "To summetriko kleisdi gia ton 2o kai > xristi  einai  -> " + SYMMETRIC_KEY ) ;
-                       
-                             //Now encrypt the symmetric key with the public
-                             CIPHER = Cipher.getInstance ( "RSA" ) ; //Returns a Cipher object that implements the specified transformation.
-                             //RSA IS ASSYMETRIC ENCRYPTION, the decryption requires A PRIVATE KEY
-                             CIPHER.init ( Cipher.ENCRYPT_MODE, OBJ ) ;
-                       
-                             try
-                             {
-                                //Extract encoded format from SECRET KEY, and these bytes pass ass input to ECRYPTION
-                                byte [ ] ENCRYPTED_SYMMETRIC_KEY = CIPHER.doFinal ( SYMMETRIC_KEY.getEncoded ( ) ) ;
-                          
-                                //Now save it to SYMMETRIC_KEY.data
-                                try
-                                {
-                                   this.OUTPUT_STREAM =  new FileOutputStream ( "C:\\Users\\LU$er\\Desktop\\My Folder\\Locations\\NetBeansProjects\\Secure_Management\\" + LOGIN_NAME_FIELD.getText ( ) + "\\SYMMETRIC_KEY.data" ) ;  //Do not overwrite file but add every time
-                                   this.OUTPUT_STREAM_2 = new ObjectOutputStream ( this.OUTPUT_STREAM ) ;
-                                   this.OUTPUT_STREAM_2.writeObject ( ENCRYPTED_SYMMETRIC_KEY ) ; 
-                                }
-                                catch ( FileNotFoundException FNFE )
-                                {
-                                    JOptionPane.showMessageDialog ( null, "Error -> " + FNFE.getLocalizedMessage ( ), "Exception - FileNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                                }
-                                catch ( IOException IOE )
-                                {
-                                    //JOptionPane.showMessageDialog ( null, "Error -> " + IOE.getLocalizedMessage ( ), "Exception - IOException", JOptionPane.ERROR_MESSAGE, null ) ;
-                                }
-                             }
-                             catch ( IllegalBlockSizeException IBSE )
-                             {
-                                 JOptionPane.showMessageDialog ( null, "Error ->" + IBSE.getLocalizedMessage ( ), "Exception - IllegalBlockSizeException", JOptionPane.ERROR_MESSAGE, null ) ;
-                             }
-                             catch ( BadPaddingException BPE )
-                             {
-                                 JOptionPane.showMessageDialog ( null, "Error -> " + BPE.getLocalizedMessage ( ), "Exception - BadPaddingException", JOptionPane.ERROR_MESSAGE, null ) ;
-                             } 
-                          }
-                          catch ( NoSuchAlgorithmException NSAE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + NSAE.getLocalizedMessage ( ), "Exception - NoSuchAlgorithmException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          catch ( NoSuchPaddingException NSPE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + NSPE.getLocalizedMessage ( ), "Exception - NoSuchPaddingException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          catch ( InvalidKeyException IKE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + IKE.getLocalizedMessage ( ), "Exception - InvalidKeyException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          JOptionPane.showMessageDialog ( null, "Successfull Sign Up", "Info", JOptionPane.INFORMATION_MESSAGE, null ) ;
-                          this.dispose ( ) ;  
-                        //  Main_Menu OBJ = new Main_Menu ( ) ;   //Now all finished good, go to Menu
-                      } //Loginname is ok
-                  }
-                  else //this block of code will be exetuced when will completed the 1t SIGN_UP, and the USERS_INFO.data will be created, so here it has
-                  {  //meaning to check the Login Name if already exists
-                     //At first Sign_Up there is no reason to check if the Login Name is already exists,
-                       byte [ ] PASSWORD_BYTES = Password_1.getText ( ).getBytes ( ) ;   //Getting bytes amount from String -> PASSWORD
-                    
-                       byte [ ] SALT = new byte [ 20 ] ;  //20 Allocation Memory
-                       new Random ( ).nextBytes ( SALT ) ;// Filling byte array - SALT with random amount of bytes for user
-                       System.out.println ( " To salt tou 1ou xristi poy kanei sign up einai-> " +SALT ) ;
-                       //Merge 2 bytes array to one total BYTE , to get total bytes for hashing
-                       byte [ ] SALT_AND_PASSWORD = new byte [ SALT.length + PASSWORD_BYTES.length ] ;//CONCATENATION TO FINAL BYTE ARRAY
-                       for ( int i = 0 ;    i < SALT_AND_PASSWORD.length ;   ++i )
-                       {
-                           //http://stackoverflow.com/questions/10336899/what-is-a-question-mark-and-colon-operator-used-for
-                             SALT_AND_PASSWORD [ i ] = i < SALT.length ? SALT [ i ] : PASSWORD_BYTES [ i - SALT.length ] ;
-                       } 
-                       // Now produce hash
-                       MessageDigest MESSAGE_DIGEST = null ;
-                       try
-                       {
-                           MESSAGE_DIGEST = MessageDigest.getInstance ( "SHA-256" ) ;
-                           //Returns a MessageDigest object that implements the specified digest algorithm.
-                       }
-                       catch ( NoSuchAlgorithmException ex ) 
-                       {
-                          JOptionPane.showMessageDialog ( null, "Error -> " + ex.getLocalizedMessage ( ), "Exception - NoSuchAlgorithmException", JOptionPane.ERROR_MESSAGE, null ) ;
-                       }
-                       MESSAGE_DIGEST.update ( SALT_AND_PASSWORD ) ;      //Updates the digest using the specified byte.
-                       byte [ ] HASH_VALUE = MESSAGE_DIGEST.digest ( ) ;  // SHA-256 Completes the hash computation by performing final operations such as padding.
-                       //and store it to byte array
-                       System.out.println ( " To HASH VALUE ( salt + password ) tou 1ou xristi poy kanei sign up einai-> " +HASH_VALUE ) ;
-                       StringBuffer sb = new StringBuffer ( ) ;
-                       for ( int i = 0 ;   i < HASH_VALUE.length ;  i++ )
-                       {
-                           sb.append ( Integer.toString ( ( HASH_VALUE [ i ] & 0xff ) + 0x100, 16 ).substring ( 1 ) ) ;  
-                       }
-                       JOptionPane.showMessageDialog ( null, "HASH_VALUE at SIGN_UP =>  " +sb.toString ( ), MESSAGE_DIGEST.toString ( ), JOptionPane.INFORMATION_MESSAGE, null ) ;
-                       //APPEAR HASH VALUE - DIGEST
-                       //Now encrpyt Hash value with public key
-                       try
-                       {
-                          CIPHER = Cipher.getInstance ( "RSA" ) ; //Returns a Cipher object that implements the specified transformation.
-                          //RSA IS ASSYMETRIC ENCRYPTION, the decryption requires A PRIVATE KEY
-                          //Now Open Stream to Open PUBLIC KEY FROM File.dat, TO READ PUBLIC KEY TO ENCRYPT HASH DIGEST
-                          try
-                          {
-                              INPUT_STREAM = new FileInputStream ( "C:\\Users\\LU$er\\Desktop\\My Folder\\Locations\\NetBeansProjects\\Secure_Management\\PUBLIC_KEY.data" ) ;
-                              INPUT_STREAM_2 = new ObjectInputStream ( INPUT_STREAM ) ;
-                              OBJ = ( PublicKey ) INPUT_STREAM_2.readObject ( ) ;  //Take key from File with casting
-                          }
-                          catch ( FileNotFoundException FNFE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + FNFE.getLocalizedMessage ( ), "Exception - FileNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          catch ( ClassNotFoundException CNFE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + CNFE.getLocalizedMessage ( ), "Exception - ClassNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          catch ( IOException IOE )
-                          {
-                              //JOptionPane.showMessageDialog ( null, "Error -> " + IOE.getLocalizedMessage ( ), "Exception - IOException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          //End of READ KEY FROM FLLE
-                       
-                          //
-                          try
-                          {   //Initializes this cipher with a key.
-                              CIPHER.init ( Cipher.ENCRYPT_MODE, OBJ ) ;    
-                              //ENCRYPT MODE static inT ,Constant used to initialize cipher to encryption mode
-                              byte [ ] FINAL_ENCRYPTED_PASSWORD = CIPHER.doFinal ( HASH_VALUE ) ;  //Encrypted hash value is now saved yo byte array
-                              //Encrypts data in a single-part operation, or finishes a multiple-part operation.
-                              //Now create FILE < USERS_INFO >
-                              try
-                              {
-                                 this.OUTPUT_STREAM =  new FileOutputStream ( "USERS_INFO.data", true ) ;  //Do not overwrite file but add every time
-                                 this.OUTPUT_STREAM_2 = new ObjectOutputStream ( this.OUTPUT_STREAM ) ;
-                                 //this.OUTPUT_STREAM_2.writeObject ( new USERS_INFO ( LOGIN_NAME_FIELD.getText ( ), NAME_SUR_FIELD.getText ( ), SALT, FINAL_ENCRYPTED_PASSWORD ) ) ; 
-                              }
-                              catch ( FileNotFoundException FNFE )
-                              {
-                                  JOptionPane.showMessageDialog ( null, "Error -> " + FNFE.getLocalizedMessage ( ), "Exception - FileNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                              }
-                              catch ( IOException IOE )
-                              {
-                                  //JOptionPane.showMessageDialog ( null, "Error -> " + IOE.getLocalizedMessage ( ), "Exception - IOException", JOptionPane.ERROR_MESSAGE, null ) ;
-                             }
-                          }
-                          catch ( InvalidKeyException IKE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + IKE.getLocalizedMessage ( ), "Exception - InvalidKeyException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          catch ( IllegalBlockSizeException IBSE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + IBSE.getLocalizedMessage ( ), "Exception - IllegalBlockSizeException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          catch ( BadPaddingException BPE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + BPE.getLocalizedMessage ( ), "Exception - BadPaddingException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                       }
-                       catch ( NoSuchPaddingException NSPE )
-                       {
-                           JOptionPane.showMessageDialog ( null, "Error -> " + NSPE.getLocalizedMessage ( ), "Exception - NoSuchPaddingException", JOptionPane.ERROR_MESSAGE, null ) ;
-                       }
-                       catch ( NoSuchAlgorithmException NSAE )
-                       {
-                           JOptionPane.showMessageDialog ( null, "Error -> " + NSAE.getLocalizedMessage ( ), "Exception - NoSuchAlgorithmException", JOptionPane.ERROR_MESSAGE, null ) ;
-                       }
-                       //NOW CREATE FOLDER FOR EVERY USER TO SAVE FOR HIM A KEY
-                       File USERNAME = new File ( LOGIN_NAME_FIELD.getText ( ) ) ;
-                       USERNAME.mkdir ( ) ;
-      
-                       //Now create symmmetric key for User in a file inside Folder - SYMMETRIC_KEY..data
-                       try
-                       {  //Returns a KeyGenerator object that generates secret keys for the specified algorithm.
-                            KEY_GENERATOR = KeyGenerator.getInstance ( "AES" ) ;  // symetric encryption, secret key is use for aes algorithm
-                          //KeyGenerator objects are reusable, i.e., after a key has been generated,
-                          //the same KeyGenerator object can be re-used to generate further keys.
-                          //The same key for decryption
-                          KEY_GENERATOR.init ( 128 ) ;  //Initializes this key generator for a certain keysize.
-                          SYMMETRIC_KEY = KEY_GENERATOR.generateKey ( ) ;  //Generates a secret key. SYMMETRIC
-                          System.out.println ( "To summetriko kleidi gia ton 1on xristi einai gia - " + SYMMETRIC_KEY ) ;
-                       
-                          //Now encrypt the symmetric key with the public
-                          CIPHER = Cipher.getInstance ( "RSA" ) ; //Returns a Cipher object that implements the specified transformation.
-                          //RSA IS ASSYMETRIC ENCRYPTION, the decryption requires A PRIVATE KEY
-                          CIPHER.init ( Cipher.ENCRYPT_MODE, OBJ ) ;
-                       
-                          try
-                          {
-                             //Extract encoded format from SECRET KEY, and these bytes pass ass input to ECRYPTION
-                             byte [ ] ENCRYPTED_SYMMETRIC_KEY = CIPHER.doFinal ( SYMMETRIC_KEY.getEncoded ( ) ) ;
-                             //Now save it to SYMMETRIC_KEY.data
-                             try
-                             {
-                                 this.OUTPUT_STREAM =  new FileOutputStream ( "C:\\Users\\LU$er\\Desktop\\My Folder\\Locations\\NetBeansProjects\\Secure_Management\\" + LOGIN_NAME_FIELD.getText ( ) + "\\SYMMETRIC_KEY.data" ) ;  //Do not overwrite file but add every time
-                                 this.OUTPUT_STREAM_2 = new ObjectOutputStream ( this.OUTPUT_STREAM ) ;
-                                 this.OUTPUT_STREAM_2.writeObject ( ENCRYPTED_SYMMETRIC_KEY ) ; 
-                             }
-                             catch ( FileNotFoundException FNFE )
-                             {
-                                 JOptionPane.showMessageDialog ( null, "Error -> " + FNFE.getLocalizedMessage ( ), "Exception - FileNotFoundException", JOptionPane.ERROR_MESSAGE, null ) ;
-                             }
-                             catch ( IOException IOE )
-                             {
-                                 //JOptionPane.showMessageDialog ( null, "Error -> " + IOE.getLocalizedMessage ( ), "Exception - IOException", JOptionPane.ERROR_MESSAGE, null ) ;
-                             }
-                          }
-                          catch ( IllegalBlockSizeException IBSE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error ->" + IBSE.getLocalizedMessage ( ), "Exception - IllegalBlockSizeException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          }
-                          catch ( BadPaddingException BPE )
-                          {
-                              JOptionPane.showMessageDialog ( null, "Error -> " + BPE.getLocalizedMessage ( ), "Exception - BadPaddingException", JOptionPane.ERROR_MESSAGE, null ) ;
-                          } 
-                       }
-                       catch ( NoSuchAlgorithmException NSAE )
-                       {
-                           JOptionPane.showMessageDialog ( null, "Error -> " + NSAE.getLocalizedMessage ( ), "Exception - NoSuchAlgorithmException", JOptionPane.ERROR_MESSAGE, null ) ;
-                       }
-                       catch ( NoSuchPaddingException NSPE )
-                       {
-                           JOptionPane.showMessageDialog ( null, "Error -> " + NSPE.getLocalizedMessage ( ), "Exception - NoSuchPaddingException", JOptionPane.ERROR_MESSAGE, null ) ;
-                       }
-                       catch ( InvalidKeyException IKE )
-                       {
-                           JOptionPane.showMessageDialog ( null, "Error -> " + IKE.getLocalizedMessage ( ), "Exception - InvalidKeyException", JOptionPane.ERROR_MESSAGE, null ) ;
-                       }
-                       JOptionPane.showMessageDialog ( null, "Successfull Sign Up", "Info", JOptionPane.INFORMATION_MESSAGE, null ) ;
-                       this.dispose ( ) ;  
-                     // Main_Menu OBJ = new Main_Menu ( ) ;   //Now all finished good, go to Menu
-                  }//End of else, file exists
-                }//End of else
-            }//End of else
+                    JOptionPane.showMessageDialog ( rootPane,"Enter a surname !","Blank Field",JOptionPane.WARNING_MESSAGE ) ;
+                }
+            }
+            else
+            {
+                JOptionPane.showMessageDialog ( rootPane,"Enter a name !","Blank Field",JOptionPane.WARNING_MESSAGE ) ;
+            }
         }//End of If Sign_Up_Window
     } //End Action Methodou
 } //End CLASS

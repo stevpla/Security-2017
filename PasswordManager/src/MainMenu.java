@@ -2,34 +2,9 @@
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.util.HashMap;
-import javax.crypto.SealedObject;
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -45,28 +20,13 @@ public class MainMenu extends JFrame implements ActionListener
     
     
     //Components
-    private JButton ADDPASSWORD, DISPLAYHIDE, PASSWORDDELETE, PASSWORDMODIFY, SIGNUP, LOGIN, LOGOUT ;
+    private JButton ADDPASSWORD, DISPLAYHIDE, PASSWORDDELETE, PASSWORDMODIFY, SIGNUP, LOGOUT ;
     private JLabel USER_LABEL ;
     private static JLabel IMAGE_LABEL ; //Mas eikozizei to onoma tou xrhsth pou einai LOG ON
     private static JLabel USER_NAME  = new JLabel ( "-" ) ;  //Replace by User Name
-    private KeyPairGenerator OBJECT_KEY = null ;
-    private KeyPair KEY_PAIR = null ;
-    public static PrivateKey PRIVATE_KEY = null ;
-    private PublicKey PUBLIC_KEY = null ;
     private static boolean CHECK_LOG_FLAG = false  ; //For authentication
-    private FileOutputStream OUTPUT_STREAM = null ;
-    private ObjectOutputStream OUTPUT_STREAM_2 = null ;
     public static PrivateKey  PRIVATE_KEY_APP = null ;
-    private String IDENTIFIER [ ] = null ;
-    private FileInputStream INPUT_STREAM = null ;
-    private ObjectInputStream INPUT_STREAM_2 = null ;
-    private Signature Digital_Sign = null ;
-    private MessageDigest Message_Digest = null ;
-    private byte [ ] File_Bytes = new byte [ 1024 ], MY_BYTES = null, TOTAL_HASH_FROM_3HASHES = null ;
-    private HashMap < String, byte [ ] > HASH_MAP = null ;
-    private JLabel Sign_In , Info;
-  
- 
+    private static String [ ] IDENTIFIER = new String [4] ;
     
     
     //Default Constructor
@@ -100,9 +60,7 @@ public class MainMenu extends JFrame implements ActionListener
         setSize ( 1000, 650 ) ;       // Size of Window
         setLocationRelativeTo ( null ) ;  // Display Window in center of Screen
         setVisible ( true ) ;
-        
-        //
-        IDENTIFIER = new String [ ] { "IFR", "IFE","MFR","MFE","SMR" } ;
+
         
         //Initialize Components
         //Buttons
@@ -128,12 +86,7 @@ public class MainMenu extends JFrame implements ActionListener
         
         SIGNUP = new JButton ( "Sign Up" ) ;
         SIGNUP.setForeground ( Color.BLACK ) ;
-        SIGNUP.setBounds ( 500, 430, 180, 50 ) ;
-        
-        LOGIN = new JButton ( "Log In" ) ;
-        LOGIN.setForeground ( Color.BLACK ) ;
-        LOGIN.setBounds ( 300, 430, 180, 50 ) ;
-        
+        SIGNUP.setBounds ( 400, 430, 180, 50 ) ;
     
         //=======
         
@@ -152,13 +105,12 @@ public class MainMenu extends JFrame implements ActionListener
         IMAGE_LABEL.setIcon ( new ImageIcon ( this .getClass ( ). getResource ("pm.jpg") ) ) ;
         IMAGE_LABEL.setBounds ( 182, 10, 700, 345 ) ; 
         
-        //Prosthetontas ta koympia
+        //
         ADDPASSWORD.addActionListener ( this ) ;
         DISPLAYHIDE.addActionListener ( this ) ;
         PASSWORDDELETE.addActionListener ( this ) ;
         PASSWORDMODIFY.addActionListener ( this ) ;
         SIGNUP.addActionListener ( this ) ;
-        LOGIN.addActionListener ( this ) ;
         LOGOUT.addActionListener ( this ) ;
         
         Container pane = getContentPane ( ) ;  //Diaxeiristis
@@ -171,7 +123,6 @@ public class MainMenu extends JFrame implements ActionListener
         pane.add ( PASSWORDMODIFY ) ;
         pane.add ( LOGOUT ) ;
         pane.add ( SIGNUP ) ;
-        pane.add ( LOGIN ) ;
         pane.add ( IMAGE_LABEL ) ;
         pane.add ( USER_LABEL ) ;
         
@@ -201,6 +152,19 @@ public class MainMenu extends JFrame implements ActionListener
         {
             this.dispose();
             SignUpMenu SUM = new SignUpMenu ( ) ;
+        }
+        
+        if ( ADDPASSWORD == source )
+        {
+            this.dispose ( ) ;
+            if ( CHECK_LOG_FLAG == false )
+            {
+                LogInMenu AW = new LogInMenu ( IDENTIFIER [ 1 ] ) ;
+            }//You alread logged on, and app <remember you>
+            else  
+            {
+                //Insert_Financial_Expenses_Window IFE = new Insert_Financial_Expenses_Window ( ) ;
+            }
         }
             
         
