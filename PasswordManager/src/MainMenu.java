@@ -4,7 +4,14 @@ import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -179,7 +186,25 @@ public class MainMenu extends JFrame implements ActionListener
             }//You alread logged on, and app <remember you>
             else  
             {
-                //Insert_Financial_Expenses_Window IFE = new Insert_Financial_Expenses_Window ( ) ;
+                try 
+                {
+                    DisplayHideMenu p = new DisplayHideMenu ( ) ;
+                } 
+                catch (NoSuchAlgorithmException ex) 
+                {
+                } 
+                catch (NoSuchPaddingException ex) 
+                {
+                } 
+                catch (InvalidKeyException ex) 
+                {
+                } 
+                catch (IllegalBlockSizeException ex) 
+                {
+                } 
+                catch (BadPaddingException ex) 
+                {
+                }
             }
         }
         
@@ -205,7 +230,25 @@ public class MainMenu extends JFrame implements ActionListener
             }//You alread logged on, and app <remember you>
             else  
             {
-                //Insert_Financial_Expenses_Window IFE = new Insert_Financial_Expenses_Window ( ) ;
+                try 
+                {
+                    DeletePasswordMenu dpm = new DeletePasswordMenu ( ) ;
+                } 
+                catch (NoSuchAlgorithmException ex) 
+                {
+                } 
+                catch (NoSuchPaddingException ex) 
+                {
+                } 
+                catch (InvalidKeyException ex) 
+                {
+                } 
+                catch (IllegalBlockSizeException ex) 
+                {
+                }
+                catch (BadPaddingException ex) 
+                {
+                }
             }
         }
         
@@ -217,6 +260,7 @@ public class MainMenu extends JFrame implements ActionListener
             }
             else
             {
+                ( LogInMenu.SymmetricKey ) = null ;
                //Call method that signatures
                //Total_FILES_Digital_Signature ( ) ;
                CHECK_LOG_FLAG = false ;  //Make it false so, authentication required, next time a user wants to do an operation

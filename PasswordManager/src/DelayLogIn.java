@@ -16,7 +16,7 @@ public class DelayLogIn extends Thread
     
     public DelayLogIn ( int delayCounter) 
     {
-        if ( delayCounter == 1 ) temp = 4000 ;
+        if ( delayCounter == 1 ) temp = 12000 ;
         if ( delayCounter == 2 ) temp = 8000 ;
         if ( delayCounter == 3 ) temp = 12000 ;
         if ( delayCounter == 4 ) temp = 16000 ;
@@ -32,6 +32,7 @@ public class DelayLogIn extends Thread
     
     public void run ( )
     {
+        System.out.println ( "errrr" ) ;
         while ( LogInMenu.flagDelayA == true )
         {
             long a = System.currentTimeMillis ( ) ;
@@ -43,5 +44,6 @@ public class DelayLogIn extends Thread
             //make flag false again, User can try again
             LogInMenu.flagDelayA = false ;
         }
+        System.out.println ( "Thread finished delay..." ) ;
     }
 }

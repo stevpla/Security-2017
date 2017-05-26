@@ -145,7 +145,7 @@ public class CreatePasswordMenu  extends JFrame implements ActionListener
         }
         
         if ( source == BSavePass)
-        { System.out.println ( "yolosss") ;
+        { 
             if ( ! ( TDomain.getText ( ).equals ( "" ) ) )
             {
                 if ( ! ( Tpassword.getText ( ).equals ( "" ) ) )

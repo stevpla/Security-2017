@@ -183,11 +183,11 @@ public class LogInMenu extends JFrame implements ActionListener
                         } 
                         catch ( CertificateException CE ) 
                         {
-                            Logger.getLogger(LogInMenu.class.getName()).log(Level.SEVERE, null, CE);
+                            //Logger.getLogger(LogInMenu.class.getName()).log(Level.SEVERE, null, CE);
                         }
                         catch (IOException ex) 
                         {
-                            Logger.getLogger(LogInMenu.class.getName()).log(Level.SEVERE, null, ex);
+                            //Logger.getLogger(LogInMenu.class.getName()).log(Level.SEVERE, null, ex);
                         }
                         //LOAD JKS and find Public Key
                         try
@@ -262,7 +262,7 @@ public class LogInMenu extends JFrame implements ActionListener
                                        }
                                        else if (IDENTIFIER_FINAL.equals("DSP")) 
                                        {
-                                          //MODIFY_GUI OBJ = new MODIFY_GUI("R");
+                                          DisplayHideMenu OBJ = new DisplayHideMenu ( ) ;
                                        }
                                        else if (IDENTIFIER_FINAL.equals("MOD")) 
                                        {
@@ -270,13 +270,14 @@ public class LogInMenu extends JFrame implements ActionListener
                                        } 
                                        else if (IDENTIFIER_FINAL.equals("DEL")) 
                                        {
-                                          //MODIFY_GUI OBJ = new MODIFY_GUI("E");
+                                          DeletePasswordMenu op = new DeletePasswordMenu ( ) ;
                                        }
                                   }
                                   else
                                   {
                                       JOptionPane.showMessageDialog ( rootPane,"Please try again....","Wrong Info's",JOptionPane.ERROR_MESSAGE ) ;
                                       banCounter ++ ;
+                                      flagDelayA = true ;
                                       int u = banCounter ;
                                       new DelayLogIn ( u ) ;
                                   }
@@ -290,7 +291,9 @@ public class LogInMenu extends JFrame implements ActionListener
                           {
                               JOptionPane.showMessageDialog ( rootPane,"This UserName doesnt exist..","Warning",JOptionPane.ERROR_MESSAGE ) ;
                               banCounter ++ ;
+                              flagDelayA = true ;
                               int e = banCounter ;
+                              //System.out.println ( " mpijes ewdo epeidh den uparxeo to u sername pou eodes..to e einai " + e ) ;
                               new DelayLogIn ( e ) ;
                               ///Start Thread Delay
                           }
@@ -298,8 +301,14 @@ public class LogInMenu extends JFrame implements ActionListener
                         catch ( Exception E )
                         {
                             JOptionPane.showMessageDialog ( rootPane,"Invalid certificate","Warning",JOptionPane.ERROR_MESSAGE ) ;
+                            if ( Checkbox.isSelected ( ) )
+                            {
+                                Checkbox.setEnabled ( false ) ;
+                                Checkbox.setEnabled ( true ) ;
+                            }
                             //Start Thread Delay
                             banCounter ++ ;
+                            flagDelayA = true ;
                             int t = banCounter ;
                             new DelayLogIn ( t ) ;
                             //exit actionPerformed
