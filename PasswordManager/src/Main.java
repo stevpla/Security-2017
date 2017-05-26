@@ -138,27 +138,6 @@ public class Main
                 JOptionPane.showMessageDialog ( null,"Main - IOException","Critical error",JOptionPane.ERROR_MESSAGE ) ;
                 System.exit ( 1 ) ;
             }
-           
-            /*KeyStore YO = KeyStore.getInstance("JKS");
-            // get user password and file input stream
-            FileInputStream RE = null;
-            try 
-            {
-                RE = new FileInputStream("PM.jks");
-                YO.load(RE, jksPassword.toCharArray() );
-            } 
-            finally 
-            {
-                if (RE != null) 
-                {
-                    RE.close();
-                }
-            }
-            //retrieve
-            X509Certificate fdr = (X509Certificate) YO.getCertificate("CertApp");
-            PrivateKey pkkp = (PrivateKey) YO.getKey("ala", jksPassword.toCharArray());
-            System.out.println(fdr.toString());*/
-            
             //call Menu
             new MainMenu ( ) ;
         }

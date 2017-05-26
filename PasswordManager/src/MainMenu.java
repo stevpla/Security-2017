@@ -26,7 +26,7 @@ public class MainMenu extends JFrame implements ActionListener
     private static JLabel USER_NAME  = new JLabel ( "-" ) ;  //Replace by User Name
     private static boolean CHECK_LOG_FLAG = false  ; //For authentication
     public static PrivateKey  PRIVATE_KEY_APP = null ;
-    private static String [ ] IDENTIFIER = new String [4] ;
+    private static String [ ] IDENTIFIER = null ;
     
     
     //Default Constructor
@@ -91,14 +91,14 @@ public class MainMenu extends JFrame implements ActionListener
         //=======
         
         //Labels
-        USER_LABEL = new JLabel ( "User : " ) ;
+        USER_LABEL = new JLabel ( "User :" ) ;
         USER_LABEL.setForeground ( Color.DARK_GRAY ) ;
         USER_LABEL.setFont  (new Font ( "Courier New", Font.BOLD, 20 ) ) ;
-        USER_LABEL.setBounds ( 20, 05, 900, 40 ) ;
+        USER_LABEL.setBounds ( 20, 05, 150, 40 ) ;
         
-        USER_NAME.setForeground ( Color.DARK_GRAY ) ;
-        USER_NAME.setFont  (new Font ( "Courier New", Font.BOLD, 20 ) ) ;
-        USER_NAME.setBounds ( 105, 05, 550, 40 ) ;  
+        USER_NAME.setForeground ( Color.BLUE ) ;
+        USER_NAME.setFont  (new Font ( "Courier New", Font.BOLD, 18 ) ) ;
+        USER_NAME.setBounds ( 84, 04, 110, 45 ) ;  
         
         
         IMAGE_LABEL = new JLabel ( ) ;
@@ -113,6 +113,8 @@ public class MainMenu extends JFrame implements ActionListener
         SIGNUP.addActionListener ( this ) ;
         LOGOUT.addActionListener ( this ) ;
         
+        IDENTIFIER = new String [ ] { "CR", "DSP","MOD","DEL" } ;
+        
         Container pane = getContentPane ( ) ;  //Diaxeiristis
         pane.setLayout ( null ) ;   //Deactivate Manager Layout
     
@@ -125,6 +127,7 @@ public class MainMenu extends JFrame implements ActionListener
         pane.add ( SIGNUP ) ;
         pane.add ( IMAGE_LABEL ) ;
         pane.add ( USER_LABEL ) ;
+        pane.add ( USER_NAME ) ;
         
         setContentPane ( pane ) ;
         
@@ -159,6 +162,19 @@ public class MainMenu extends JFrame implements ActionListener
             this.dispose ( ) ;
             if ( CHECK_LOG_FLAG == false )
             {
+                LogInMenu AW = new LogInMenu ( IDENTIFIER [ 0 ] ) ;
+            }//You alread logged on, and app <remember you>
+            else  
+            {
+                CreatePasswordMenu cpm = new CreatePasswordMenu ( ) ;
+            }
+        }
+        
+        if ( DISPLAYHIDE == source )
+        {
+            this.dispose ( ) ;
+            if ( CHECK_LOG_FLAG == false )
+            {
                 LogInMenu AW = new LogInMenu ( IDENTIFIER [ 1 ] ) ;
             }//You alread logged on, and app <remember you>
             else  
@@ -166,15 +182,49 @@ public class MainMenu extends JFrame implements ActionListener
                 //Insert_Financial_Expenses_Window IFE = new Insert_Financial_Expenses_Window ( ) ;
             }
         }
-            
         
+        if ( PASSWORDMODIFY == source )
+        {
+            this.dispose ( ) ;
+            if ( CHECK_LOG_FLAG == false )
+            {
+                LogInMenu AW = new LogInMenu ( IDENTIFIER [ 2 ] ) ;
+            }//You alread logged on, and app <remember you>
+            else  
+            {
+                //Insert_Financial_Expenses_Window IFE = new Insert_Financial_Expenses_Window ( ) ;
+            }
+        }
+        
+        if ( PASSWORDDELETE == source )
+        {
+            this.dispose ( ) ;
+            if ( CHECK_LOG_FLAG == false )
+            {
+                LogInMenu AW = new LogInMenu ( IDENTIFIER [ 3 ] ) ;
+            }//You alread logged on, and app <remember you>
+            else  
+            {
+                //Insert_Financial_Expenses_Window IFE = new Insert_Financial_Expenses_Window ( ) ;
+            }
+        }
+        
+        if ( LOGOUT == source)
+        {
+            if ( CHECK_LOG_FLAG == false )
+            {
+                JOptionPane.showMessageDialog ( null, "There is no Log On User Right Now..", "Info", JOptionPane.INFORMATION_MESSAGE, null ) ;
+            }
+            else
+            {
+               //Call method that signatures
+               //Total_FILES_Digital_Signature ( ) ;
+               CHECK_LOG_FLAG = false ;  //Make it false so, authentication required, next time a user wants to do an operation
+               USER_NAME.setText ( "" ) ;  //Clear name because you logouted
+               JOptionPane.showMessageDialog ( null, "Successfull Logout", "Logout", JOptionPane.INFORMATION_MESSAGE, null ) ;
+            }
+        }
      }//Telos methodou ACTION
-    
-    
-  
-    
-    
-    
 }//END CLASS
         
         
